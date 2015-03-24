@@ -24,15 +24,16 @@
 
 (defmethod read-apx ((input stream))
   (let ((graph (make-instance 'digraph)))
-    (let ((*readtable* (myr)))
-      (loop for form = (let ((*package* (find-package :graph-apx)))
+    (let ((*readtable* (myr))
+          (package (find-package :graph-apx)))
+      (loop for form = (let ((*package* package))
                          (read input nil))
             while form
-            do (destructuring-bind (predicate . args)
-                   (cons form (read input))
+            do (let ((predicate form)
+                     (args (read input)))
                  (ecase predicate
                    (arg (populate graph :nodes args))
-                   (att (populate graph :edges (list args)))))
+                   (att (add-edge graph args))))
             do (unless (eql #\. (read input))
                  (error "expected `.'"))))
     graph))
